@@ -5,6 +5,13 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+repositories {
+    maven {
+        name "Taskcluster Nightly"
+        url "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/SFnB2mLHSn2VmHsPTrNP9A/runs/0/artifacts/public/build/maven"
+    }
+}
+
 android {
     compileSdkVersion config.compileSdkVersion
 
