@@ -351,7 +351,7 @@ class DownloadTest {
         deleteDownloadedFileOnStorage(secondDownloadedFile)
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1840994")
+    @Ignore("Failing: https://bugzilla.mozilla.org/show_bug.cgi?id=1840994")
     @Test
     fun systemNotificationCantBeDismissedWhileDownloadingTest() {
         // Clear the "Firefox Fenix default browser notification"
@@ -373,13 +373,6 @@ class DownloadTest {
             verifySystemNotificationExists("Firefox Fenix")
             expandNotificationMessage()
             swipeDownloadNotification("Left", false)
-            verifySystemNotificationExists("Firefox Fenix")
-        }.closeNotificationTray {
-        }.openNotificationShade {
-            verifySystemNotificationExists("Firefox Fenix")
-            expandNotificationMessage()
-            swipeDownloadNotification("Right", false)
-            verifySystemNotificationExists("Firefox Fenix")
             clickDownloadNotificationControlButton("CANCEL")
         }
         deleteDownloadedFileOnStorage(downloadFile)

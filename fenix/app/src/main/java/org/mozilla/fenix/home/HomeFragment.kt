@@ -155,6 +155,7 @@ class HomeFragment : Fragment() {
             showRenamedSnackbar()
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
             view?.let {
                 val message = if (sessions.size == 1) {
@@ -162,6 +163,11 @@ class HomeFragment : Fragment() {
                 } else {
                     R.string.create_collection_tabs_saved
                 }
+
+                lifecycleScope.launch(Main) {
+                    binding.sessionControlRecyclerView.adapter?.notifyDataSetChanged()
+                }
+
                 FenixSnackbar.make(
                     view = it,
                     duration = Snackbar.LENGTH_LONG,
@@ -371,6 +377,8 @@ class HomeFragment : Fragment() {
                 activity = activity,
                 navController = findNavController(),
                 appStore = components.appStore,
+                browserStore = components.core.store,
+                selectTabUseCase = components.useCases.tabsUseCases.selectTab,
             ),
             recentVisitsController = DefaultRecentVisitsController(
                 navController = findNavController(),

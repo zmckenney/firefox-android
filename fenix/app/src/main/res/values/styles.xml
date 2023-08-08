@@ -4,12 +4,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="SplashScreen" parent="Theme.SplashScreen.IconBackground">
-        <item name="windowSplashScreenBackground">@android:color/transparent</item>
-        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/animated_splash_screen</item>
-        <!-- Splash screen is animated to maximum 12 seconds -->
-        <item name="windowSplashScreenAnimationDuration">12000</item>
+    <style name="SplashScreen" parent="SplashScreenThemeBase"/>
+
+    <style name="SplashScreenThemeBase" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+        <item name="windowSplashScreenBackground">@color/fx_mobile_layer_color_1</item>
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 
@@ -17,6 +16,7 @@
         <!-- Android system styling -->
         <item name="searchViewStyle">@style/SearchViewStyle</item>
         <item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyle</item>
+        <item name="android:textAlignment">viewStart</item>
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
@@ -218,6 +218,7 @@
         <!-- Android system styling -->
         <item name="searchViewStyle">@style/SearchViewStyle</item>
         <item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyle</item>
+        <item name="android:textAlignment">viewStart</item>
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
@@ -346,6 +347,9 @@
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase" />
+    <style name="FeltPrivateTheme" parent="PrivateThemeBase">
+        <item name="homeBackground">@drawable/felt_private_home_background_gradient</item>
+    </style>
 
     <!-- Fade animation for theme switching -->
     <style name="WindowAnimationTransition">
@@ -599,6 +603,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">40dp</item>
         <item name="android:layout_marginTop">32dp</item>
+        <item name="android:textAlignment">center</item>
         <item name="android:textColor">?accentUsedOnDarkBackground</item>
         <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
