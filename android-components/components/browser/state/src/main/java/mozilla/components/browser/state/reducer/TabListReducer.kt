@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.reducer
 
+import android.util.Log
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
@@ -116,6 +117,15 @@ internal object TabListReducer {
                         tabPartitions = state.tabPartitions.removeTabs(listOf(action.tabId)),
                     )
                 }
+            }
+
+            //TODO:
+            is TabListAction.DiscardTabAction -> {
+                val tabToDiscard = state.findTab(action.tabId)
+                Log.d("ZMM", "NO-OP -> Tab ID to discard: ${tabToDiscard?.id}")
+
+
+                state.copy()
             }
 
             is TabListAction.RemoveTabsAction -> {

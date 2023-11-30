@@ -227,6 +227,9 @@ sealed class TabListAction : BrowserAction() {
      */
     data class RemoveTabsAction(val tabIds: List<String>) : TabListAction()
 
+    //TODO ZMM:
+    data class DiscardTabAction(val tabId: String) : TabListAction()
+
     /**
      * Restores state from a (partial) previous state.
      *

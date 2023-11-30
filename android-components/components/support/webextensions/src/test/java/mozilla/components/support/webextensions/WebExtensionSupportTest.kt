@@ -203,7 +203,7 @@ class WebExtensionSupportTest {
 
         store.waitUntilIdle()
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
-        tabHandlerCaptor.value.onCloseTab(ext, engineSession)
+        tabHandlerCaptor.value.onCloseTab(ext)
         verify(store).dispatch(TabListAction.RemoveTabAction(tabId))
     }
 
@@ -236,7 +236,7 @@ class WebExtensionSupportTest {
 
         store.waitUntilIdle()
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
-        tabHandlerCaptor.value.onCloseTab(ext, engineSession)
+        tabHandlerCaptor.value.onCloseTab(ext)
         verify(store).dispatch(CustomTabListAction.RemoveCustomTabAction(tabId))
     }
 
@@ -276,7 +276,7 @@ class WebExtensionSupportTest {
 
         store.waitUntilIdle()
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
-        tabHandlerCaptor.value.onCloseTab(ext, engineSession)
+        tabHandlerCaptor.value.onCloseTab(ext)
         assertTrue(onCloseTabCalled)
     }
 

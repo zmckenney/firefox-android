@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.webextension
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
@@ -17,14 +18,17 @@ import mozilla.components.concept.engine.webextension.Incognito
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
+import mozilla.components.concept.engine.webextension.QueryTab
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
+import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.WebExtension.QueryTabDetails
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
 import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
@@ -256,6 +260,15 @@ class GeckoWebExtension(
     override fun registerTabHandler(tabHandler: TabHandler, defaultSettings: Settings?) {
         val tabDelegate = object : GeckoNativeWebExtension.TabDelegate {
 
+            override fun onCloseTab(source: org.mozilla.geckoview.WebExtension?, tabId: String): GeckoResult<AllowOrDeny> {
+                return if (tabHandler.onCloseTab(
+                    this@GeckoWebExtension, tabId)) {
+                    GeckoResult.allow()
+                } else {
+                    GeckoResult.deny()
+                }
+            }
+
             override fun onNewTab(
                 ext: GeckoNativeWebExtension,
                 tabDetails: GeckoNativeWebExtension.CreateTabDetails,
@@ -287,6 +300,28 @@ class GeckoWebExtension(
                         optionsPageUrl,
                     )
                 }
+            }
+
+            override fun onQueryTabs(): GeckoResult<Array<QueryTabDetails>>? {
+                Log.d("ZMM", "Successfully calling query for tabs in Fenix")
+
+                val tabs = tabHandler.onQueryTabs()
+                val geckoBundleTabs = ArrayList<QueryTabDetails>()
+
+                Log.d("ZMM", "GeckoWebExtension tabHandler.onQueryTabs size: ${tabs.size}")
+                Log.d("ZMM", "GeckoWebExtension tabHandler.onQueryTabs ids: ${tabs.map { it.id }}")
+                geckoBundleTabs.addAll(tabs.map { tab ->
+                    val bundle = GeckoBundle(5)
+                    bundle.putString(QueryTabDetails.ID_KEY, tab.id)
+                    bundle.putString(QueryTabDetails.TITLE_KEY, tab.title)
+                    bundle.putString(QueryTabDetails.URL_KEY, tab.url)
+                    bundle.putString(QueryTabDetails.FAVICON_URL_KEY, tab.faviconUrl)
+                    bundle.putBoolean(QueryTabDetails.IS_PRIVATE_BROWSING_KEY, tab.isPrivateBrowsing)
+                    QueryTabDetails(bundle)
+                })
+
+                //FIXME
+                return GeckoResult.fromValue(geckoBundleTabs.toTypedArray())
             }
         }
 
@@ -327,6 +362,20 @@ class GeckoWebExtension(
                     } else {
                         GeckoResult.deny()
                     }
+                } else {
+                    GeckoResult.deny()
+                }
+            }
+
+            override fun onDiscardTab(
+                extension: GeckoNativeWebExtension,
+                geckoSession: GeckoSession,
+            ): GeckoResult<AllowOrDeny> {
+                return if (tabHandler.onDiscardTab(
+                        this@GeckoWebExtension,
+                        session
+                )) {
+                    GeckoResult.allow()
                 } else {
                     GeckoResult.deny()
                 }

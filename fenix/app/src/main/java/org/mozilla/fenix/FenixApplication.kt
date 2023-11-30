@@ -668,7 +668,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     )
                 },
                 onCloseTabOverride = { _, sessionId ->
+                    logger.debug("ZMM: onCloseTabOverride -> $sessionId")
                     components.useCases.tabsUseCases.removeTab(sessionId)
+                },
+                onDiscardTabOverride = { _, sessionId ->
+                    components.useCases.tabsUseCases.discardTab(sessionId)
                 },
                 onSelectTabOverride = { _, sessionId ->
                     components.useCases.tabsUseCases.selectTab(sessionId)

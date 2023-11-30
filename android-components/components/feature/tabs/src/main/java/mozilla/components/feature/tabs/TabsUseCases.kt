@@ -113,6 +113,19 @@ class TabsUseCases(
         }
     }
 
+    //TODO: ZMM
+    interface DiscardTabUseCase {
+        operator fun invoke(tabId: String)
+    }
+
+    class DefaultDiscardTabUseCase internal constructor(
+        private val store: BrowserStore,
+    ) : DiscardTabUseCase {
+        override fun invoke(tabId: String) {
+            store.dispatch(TabListAction.DiscardTabAction(tabId))
+        }
+    }
+
     class AddNewTabUseCase internal constructor(
         private val store: BrowserStore,
     ) : LoadUrlUseCase {
@@ -533,6 +546,7 @@ class TabsUseCases(
 
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(store) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(store) }
+    val discardTab: DiscardTabUseCase by lazy { DefaultDiscardTabUseCase(store) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store) }
     val removeAllTabs: RemoveAllTabsUseCase by lazy { RemoveAllTabsUseCase(store) }
     val removeTabs: RemoveTabsUseCase by lazy { RemoveTabsUseCase(store) }

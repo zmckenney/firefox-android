@@ -311,6 +311,12 @@ interface TabHandler {
      * @return true if the tab was closed, otherwise false.
      */
     fun onCloseTab(webExtension: WebExtension, engineSession: EngineSession) = false
+
+    fun onCloseTab(webExtension: WebExtension, tabId: String) = false
+
+    fun onDiscardTab(webExtension: WebExtension, engineSession: EngineSession) = false
+
+    fun onQueryTabs(): List<QueryTab> = emptyList()
 }
 
 /**

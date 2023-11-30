@@ -4,6 +4,7 @@
 
 package mozilla.components.support.webextensions
 
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -26,8 +27,10 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.QueryTab
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -65,6 +68,7 @@ object WebExtensionSupport {
     private var onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null
     private var onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null
     private var onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null
+    private var onDiscardTabOverride: ((WebExtension?, String) -> Unit)? = null
 
     val installedExtensions = ConcurrentHashMap<String, WebExtension>()
 
@@ -101,6 +105,7 @@ object WebExtensionSupport {
         private val sessionId: String,
         private val onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
         private val onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
+        private val onDiscardTabOverride: ((WebExtension?, String) -> Unit)? = null,
     ) : TabHandler {
 
         override fun onCloseTab(webExtension: WebExtension, engineSession: EngineSession): Boolean {
@@ -128,6 +133,19 @@ object WebExtensionSupport {
                 url?.let {
                     engineSession.loadUrl(it)
                 }
+                true
+            } else {
+                false
+            }
+        }
+
+        override fun onDiscardTab(
+            webExtension: WebExtension,
+            engineSession: EngineSession,
+        ): Boolean {
+            val tab = store.state.findTabOrCustomTab(sessionId)
+            return if (tab != null) {
+                discardTab(tab.id, tab.isCustomTab(), store, onDiscardTabOverride, webExtension)
                 true
             } else {
                 false
@@ -173,6 +191,7 @@ object WebExtensionSupport {
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> String)? = null,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
+        onDiscardTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onUpdatePermissionRequest: onUpdatePermissionRequest? = { _, _, _, _ -> },
         onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null,
     ) {
@@ -180,6 +199,7 @@ object WebExtensionSupport {
         this.onExtensionsLoaded = onExtensionsLoaded
         this.onCloseTabOverride = onCloseTabOverride
         this.onSelectTabOverride = onSelectTabOverride
+        this.onDiscardTabOverride = onDiscardTabOverride
 
         // Queries the runtime for installed extensions and adds them to the store
         registerInstalledExtensions(store, runtime)
@@ -189,6 +209,48 @@ object WebExtensionSupport {
 
         runtime.registerWebExtensionDelegate(
             object : WebExtensionDelegate {
+
+                override fun onCloseTab(tabId: String): Boolean {
+                    val tab = store.state.findTabOrCustomTab(tabId)
+                    return if (tab != null) {
+                        closeTab(tab.id, tab.isCustomTab(), store, onCloseTabOverride, null)
+                        true
+                    } else {
+                        false
+                    }
+                }
+
+                override fun onQueryTabs(): List<QueryTab> {
+                    val tabs = store.state.tabs
+                    val closedTabs = store.state.closedTabs
+                    val allTabs = store.state.allTabs
+                    Log.d("ZMM",
+                        "WebExtensionSupport tabs: $tabs " +
+                        "|| closedTabs: $closedTabs " +
+                        "|| allTabs: $allTabs"
+                    )
+                    val activeTab = store.state.selectedTabId
+
+                    Log.d("ZMM", "ids to hashCode(): ${tabs.map { it.id }}")
+                    return tabs.map {
+                        QueryTab(
+                            id = it.id,
+                            active = it.id == activeTab,
+                            attention = false, //TODO: Always false?
+                            isPrivateBrowsing = it.content.private,
+                            lastAccessed = it.lastAccess,
+                            audible = (it.mediaSessionState?.playbackState?.equals(MediaSession.PlaybackState.PLAYING) ?: false
+                                && it.mediaSessionState?.muted == false),   //FIXME: A video without audio could be playing without muted volume and this would return true
+                            muted = it.mediaSessionState?.muted == false,  //TODO: Test whether muted is considered "True" when there is no media
+                            isArticle = it.readerState.readerable,
+                            isInReaderMode = it.readerState.active,
+                            url = it.content.url,
+                            title = it.content.title,
+                            faviconUrl = "TEST"
+                        )
+                    }
+                }
+
                 override fun onNewTab(extension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) {
                     openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession, url, active)
                 }
@@ -473,7 +535,7 @@ object WebExtensionSupport {
         }
 
         if (!extension.hasTabHandler(session)) {
-            val tabHandler = SessionTabHandler(store, sessionId, onCloseTabOverride, onSelectTabOverride)
+            val tabHandler = SessionTabHandler(store, sessionId, onCloseTabOverride, onSelectTabOverride, )
             extension.registerTabHandler(session, tabHandler)
         }
     }
@@ -517,6 +579,29 @@ object WebExtensionSupport {
                 TabListAction.RemoveTabAction(id)
             }
 
+            store.dispatch(action)
+        }
+    }
+
+    private fun discardTab(
+        id: String,
+        customTab: Boolean,
+        store: BrowserStore,
+        onDiscardTabOverride: ((WebExtension?, String) -> Unit)? = null,
+        webExtension: WebExtension? = null,
+    ) {
+        logger.debug("ZMM: isCustomTab: $customTab")
+        if (onDiscardTabOverride != null) {
+            onDiscardTabOverride.invoke(webExtension, id)
+        } else {
+            //TODO: ZMM
+//            val action = if (customTab) {
+//                CustomTabListAction.DiscardCustomTabAction(id)
+//            } else {
+//                TabListAction.DiscardTabAction(id)
+//            }
+//
+            val action = TabListAction.DiscardTabAction(id)
             store.dispatch(action)
         }
     }

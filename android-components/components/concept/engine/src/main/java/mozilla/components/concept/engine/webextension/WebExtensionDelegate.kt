@@ -174,4 +174,32 @@ interface WebExtensionDelegate {
      * it has been killed or crashed too many times. A client should determine what to do next.
      */
     fun onDisabledExtensionProcessSpawning() = Unit
+
+    //TODO: ZMM
+    fun onQueryTabs(): List<QueryTab> = emptyList()
+
+    fun onCloseTab(tabId: String): Boolean = false
 }
+
+data class QueryTab(
+    val id: String,
+    val index: Int = 0,
+    val windowId: Int? = null,
+    val highlighted: Boolean = false,
+    val active: Boolean,
+    val attention: Boolean = false,
+    // val status:  TODO:ZMM - status here or GV?
+    // val discarded: Boolean, TODO:ZMM discarded is determined in the GV layer
+    val isPrivateBrowsing: Boolean,
+    val lastAccessed: Long,
+    val audible: Boolean,
+    // val autoDiscardable TODO:ZMM
+    val muted: Boolean,
+    val isArticle: Boolean,
+    val isInReaderMode: Boolean,
+    // val sharingState: TODO:ZMM This is about sharing Mic, screen, camera, etc.
+    // val cookieStoreId: TODO:ZMM - here or GV?
+    val url: String,
+    val title: String,
+    val faviconUrl: String,
+)

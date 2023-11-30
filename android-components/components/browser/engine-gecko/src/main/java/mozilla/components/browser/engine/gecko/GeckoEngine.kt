@@ -55,6 +55,7 @@ import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.InstallationMethod
+import mozilla.components.concept.engine.webextension.QueryTab
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -120,6 +121,14 @@ class GeckoEngine(
     private val webExtensionTabHandler = object : TabHandler {
         override fun onNewTab(webExtension: WebExtension, engineSession: EngineSession, active: Boolean, url: String) {
             webExtensionDelegate?.onNewTab(webExtension, engineSession, active, url)
+        }
+
+        override fun onQueryTabs(): List<QueryTab> {
+            return webExtensionDelegate?.onQueryTabs() ?: emptyList()
+        }
+
+        override fun onCloseTab(webExtension: WebExtension, tabId: String): Boolean {
+            return webExtensionDelegate?.onCloseTab(tabId) ?: false
         }
     }
 
